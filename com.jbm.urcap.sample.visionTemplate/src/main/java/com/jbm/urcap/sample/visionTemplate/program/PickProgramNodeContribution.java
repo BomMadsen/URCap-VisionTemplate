@@ -212,6 +212,8 @@ public class PickProgramNodeContribution implements ProgramNodeContribution{
 		// Or we can just use this in an assignment:
 		writer.assign(getApproachWaypointVariable(), "p[0.1, 0.2, 0.3, 0, 3.1415, 0]");
 		writer.appendLine("popup(\"Actual approach name is: "+actualApproachVariableName+"\",\"Vision Message\", blocking=True)");
+		
+		writer.writeChildren();
 	}
 	
 	private Variable getApproachWaypointVariable() {

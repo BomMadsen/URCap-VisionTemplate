@@ -37,8 +37,7 @@ public class NoAvailablePartsProgramContribution implements ProgramNodeContribut
 
 	@Override
 	public void generateScript(ScriptWriter writer) {
-		// TODO Auto-generated method stub
-		
+		writer.writeChildren();
 	}
 
 }

@@ -37,8 +37,7 @@ public class PartsFoundAndReachableProgramContribution implements ProgramNodeCon
 
 	@Override
 	public void generateScript(ScriptWriter writer) {
-		// TODO Auto-generated method stub
-		
+		writer.writeChildren();
 	}
 
 }
