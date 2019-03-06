@@ -1,0 +1,22 @@
+# use glob syntax.
+syntax: glob
+*.class
+*~
+*.bak
+*.off
+*.old
+
+# Eclipse
+.classpath
+.project
+.settings
+
+com.jbm.urcap.sample.visionTemplate/.settings/
+com.jbm.urcap.sample.visionTemplate/.gitignore
+com.jbm.urcap.sample.visionTemplate/target/classes/
+com.jbm.urcap.sample.visionTemplate/target/test-classes/
+com.jbm.urcap.sample.visionTemplate/target/generated-sources/
+com.jbm.urcap.sample.visionTemplate/target/generated-test-sources/
+com.jbm.urcap.sample.visionTemplate/target/maven-status/
+com.jbm.urcap.sample.visionTemplate/target/surefire-reports/
+com.jbm.urcap.sample.visionTemplate/.pydevproject
