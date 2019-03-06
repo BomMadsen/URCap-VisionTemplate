@@ -8,7 +8,7 @@
 	<groupId>com.jbm.urcap.sample</groupId>
 	<artifactId>visionTemplate</artifactId>
 	<version>1.0-SNAPSHOT</version>
-	<name>visionTemplate</name>
+	<name>Vision Template</name>
 	<packaging>bundle</packaging>
 
 	<properties>
@@ -19,11 +19,11 @@
 		<!--********************************************************************-->
 		<!--******************* BEGINNING OF URCAP META DATA *******************-->
 		<urcap.symbolicname>com.jbm.urcap.sample.visionTemplate</urcap.symbolicname>
-		<urcap.vendor>URCaps R us Inc.</urcap.vendor>
+		<urcap.vendor>JBM</urcap.vendor>
 		<urcap.contactAddress>123 URCap Street</urcap.contactAddress>
 		<urcap.copyright>Copyright notice (C)</urcap.copyright>
 		<urcap.description>This is a description of the URCap</urcap.description>
-		<urcap.licenseType>License type</urcap.licenseType>
+		<urcap.licenseType>Demonstration sample</urcap.licenseType>
 		<!--********************** END OF URCAP META DATA **********************-->
 		<!--********************************************************************-->
 
@@ -33,7 +33,7 @@
 		<urcap.install.password>easybot</urcap.install.password>
 
 		<!--Install path for the UR Sim-->
-		<ursim.home></ursim.home>
+		<ursim.home>/home/jbm/ursim/ursim-5.2.0.61336/</ursim.home>
 
 		<!--Host and standard user/password for UR Sim running in a VM-->
 		<ursimvm.install.host></ursimvm.install.host>
