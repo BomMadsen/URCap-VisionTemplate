@@ -82,9 +82,8 @@ public class PickProgramNodeContribution implements ProgramNodeContribution{
 					TreeNode partsFoundTreeNode = root.getChildren().get(0);
 					
 					// Build a MoveJ for approach
-					MoveNode approachMoveJ = nf.createMoveNode();
-					MoveJMoveNodeConfig approachMoveJConfig = approachMoveJ.getConfigFactory().createMoveJConfig();
-					approachMoveJ.setConfig(approachMoveJConfig);
+					MoveNode approachMoveJ = nf.createMoveNodeNoTemplate();
+					approachMoveJ.setConfig(approachMoveJ.getConfigBuilders().createMoveJConfigBuilder().build());
 					
 					// Build approach waypoint
 					WaypointNode approachWaypoint = nf.createWaypointNode();
@@ -93,11 +92,11 @@ public class PickProgramNodeContribution implements ProgramNodeContribution{
 					BlendParameters approachWaypointDefaultBlends = approachWaypoint.getConfigFactory().createNoBlendParameters();
 					WaypointMotionParameters approachMotionParams = approachWaypoint.getConfigFactory().createSharedMotionParameters();
 					WaypointNodeConfig approachConfig = approachWaypoint.getConfigFactory().createVariablePositionConfig(approachVariable, approachWaypointDefaultBlends, approachMotionParams);
+					approachWaypoint.setConfig(approachConfig);
 					
 					// Build a MoveL for target
-					MoveNode targetMoveL = nf.createMoveNode();
-					MoveLMoveNodeConfig targetMoveLConfig = targetMoveL.getConfigFactory().createMoveLConfig();
-					targetMoveL.setConfig(targetMoveLConfig);
+					MoveNode targetMoveL = nf.createMoveNodeNoTemplate();
+					targetMoveL.setConfig(targetMoveL.getConfigBuilders().createMoveLConfigBuilder().build());
 					
 					// Build target waypoint
 					WaypointNode targetWaypoint = nf.createWaypointNode();
@@ -106,6 +105,7 @@ public class PickProgramNodeContribution implements ProgramNodeContribution{
 					BlendParameters targetWaypointDefaultBlends = targetWaypoint.getConfigFactory().createNoBlendParameters();
 					WaypointMotionParameters targetMotionParams = targetWaypoint.getConfigFactory().createSharedMotionParameters();
 					WaypointNodeConfig targetConfig = targetWaypoint.getConfigFactory().createVariablePositionConfig(targetVariable, targetWaypointDefaultBlends, targetMotionParams);
+					targetWaypoint.setConfig(targetConfig);
 					
 					// Build a folder for gripper logic
 					FolderNode gripperFolder = nf.createFolderNode();
@@ -116,9 +116,8 @@ public class PickProgramNodeContribution implements ProgramNodeContribution{
 					gripperComment.setComment("Insert gripper GRIP logic here");
 					
 					// Build a MoveL for exit
-					MoveNode exitMoveL = nf.createMoveNode();
-					MoveLMoveNodeConfig exitMoveLConfig = exitMoveL.getConfigFactory().createMoveLConfig();
-					exitMoveL.setConfig(exitMoveLConfig);
+					MoveNode exitMoveL = nf.createMoveNodeNoTemplate();
+					exitMoveL.setConfig(exitMoveL.getConfigBuilders().createMoveJConfigBuilder().build());
 					
 					// Build exit waypoint
 					WaypointNode exitWaypoint = nf.createWaypointNode();
@@ -127,22 +126,20 @@ public class PickProgramNodeContribution implements ProgramNodeContribution{
 					BlendParameters exitWaypointDefaultBlends = exitWaypoint.getConfigFactory().createNoBlendParameters();
 					WaypointMotionParameters exitMotionParams = exitWaypoint.getConfigFactory().createSharedMotionParameters();
 					WaypointNodeConfig exitConfig = exitWaypoint.getConfigFactory().createVariablePositionConfig(exitVariable, exitWaypointDefaultBlends, exitMotionParams);
+					exitWaypoint.setConfig(exitConfig);
 					
 					// Now we have build all the components. 
 					// Let's put them into a tree
 					TreeNode approachMoveTreeNode = partsFoundTreeNode.addChild(approachMoveJ);
-					WaypointNode defaultApproachWpt = (WaypointNode) approachMoveTreeNode.getChildren().get(0).getProgramNode();
-					defaultApproachWpt.setConfig(approachConfig); // Overwrite the default waypoint from Move
+					approachMoveTreeNode.addChild(approachWaypoint);
 					
 					TreeNode targetMoveTreeNode = partsFoundTreeNode.addChild(targetMoveL);
-					WaypointNode defaultTargetWpt = (WaypointNode) targetMoveTreeNode.getChildren().get(0).getProgramNode();
-					defaultTargetWpt.setConfig(targetConfig); // Overwrite the default waypoint from Move
+					targetMoveTreeNode.addChild(targetWaypoint);
 					
 					partsFoundTreeNode.addChild(gripperFolder).addChild(gripperComment);
 					
 					TreeNode exitMoveTreeNode = partsFoundTreeNode.addChild(exitMoveL);
-					WaypointNode defaultExitWpt = (WaypointNode) exitMoveTreeNode.getChildren().get(0).getProgramNode();
-					defaultExitWpt.setConfig(exitConfig); // Overwrite the default waypoint from Move
+					exitMoveTreeNode.addChild(exitWaypoint);
 					
 					// Insert comment under NoAvailablePartsNode
 					TreeNode noAvailablePartsTreeNode = root.getChildren().get(1);
