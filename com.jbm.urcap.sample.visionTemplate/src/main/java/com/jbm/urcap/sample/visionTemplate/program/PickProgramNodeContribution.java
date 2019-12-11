@@ -26,6 +26,7 @@ import com.ur.urcap.api.domain.program.nodes.builtin.configurations.waypointnode
 import com.ur.urcap.api.domain.program.nodes.builtin.configurations.waypointnode.WaypointNodeConfig;
 import com.ur.urcap.api.domain.program.nodes.contributable.device.gripper.GripperNode;
 import com.ur.urcap.api.domain.program.nodes.contributable.device.gripper.GripperNodeFactory;
+import com.ur.urcap.api.domain.program.nodes.contributable.device.gripper.configuration.GripActionConfig;
 import com.ur.urcap.api.domain.program.structure.TreeNode;
 import com.ur.urcap.api.domain.program.structure.TreeStructureException;
 import com.ur.urcap.api.domain.script.ScriptWriter;
@@ -188,12 +189,19 @@ public class PickProgramNodeContribution implements ProgramNodeContribution{
 			GripperDevice gripper = getGrippers().get(0);
 			GripperNode gripperNode = gnf.createGripperNode(gripper);
 			
+			GripActionConfig gripConfig = gripperNode.createGripActionConfigBuilder().build();
+			gripperNode.setConfig(gripConfig);
+			
 			return gripperNode;
 		} else if (gripperCount > 1) {
 			// More than one gripper available
 			
+			// TODO Handle letting the user select which gripper to use
 			GripperDevice gripper = getGrippers().get(1);
 			GripperNode gripperNode = gnf.createGripperNode(gripper);
+			
+			GripActionConfig gripConfig = gripperNode.createGripActionConfigBuilder().build();
+			gripperNode.setConfig(gripConfig);
 			
 			return gripperNode;
 		} else {
