@@ -1,5 +1,7 @@
 package com.jbm.urcap.sample.visionTemplate.program;
 
+import java.util.List;
+
 import com.jbm.urcap.sample.visionTemplate.templateNodes.ErrorProgramService;
 import com.jbm.urcap.sample.visionTemplate.templateNodes.NoAvailablePartsProgramService;
 import com.jbm.urcap.sample.visionTemplate.templateNodes.PartsFoundAndReachableProgramService;
@@ -8,7 +10,10 @@ import com.ur.urcap.api.contribution.program.CreationContext.NodeCreationType;
 import com.ur.urcap.api.contribution.program.CreationContext;
 import com.ur.urcap.api.contribution.program.ProgramAPIProvider;
 import com.ur.urcap.api.domain.data.DataModel;
+import com.ur.urcap.api.domain.device.gripper.GripperDevice;
+import com.ur.urcap.api.domain.device.gripper.GripperManager;
 import com.ur.urcap.api.domain.program.ProgramModel;
+import com.ur.urcap.api.domain.program.nodes.ProgramNode;
 import com.ur.urcap.api.domain.program.nodes.ProgramNodeFactory;
 import com.ur.urcap.api.domain.program.nodes.builtin.CommentNode;
 import com.ur.urcap.api.domain.program.nodes.builtin.FolderNode;
@@ -19,6 +24,8 @@ import com.ur.urcap.api.domain.program.nodes.builtin.configurations.movenode.Mov
 import com.ur.urcap.api.domain.program.nodes.builtin.configurations.waypointnode.BlendParameters;
 import com.ur.urcap.api.domain.program.nodes.builtin.configurations.waypointnode.WaypointMotionParameters;
 import com.ur.urcap.api.domain.program.nodes.builtin.configurations.waypointnode.WaypointNodeConfig;
+import com.ur.urcap.api.domain.program.nodes.contributable.device.gripper.GripperNode;
+import com.ur.urcap.api.domain.program.nodes.contributable.device.gripper.GripperNodeFactory;
 import com.ur.urcap.api.domain.program.structure.TreeNode;
 import com.ur.urcap.api.domain.program.structure.TreeStructureException;
 import com.ur.urcap.api.domain.script.ScriptWriter;
@@ -107,14 +114,6 @@ public class PickProgramNodeContribution implements ProgramNodeContribution{
 					WaypointNodeConfig targetConfig = targetWaypoint.getConfigFactory().createVariablePositionConfig(targetVariable, targetWaypointDefaultBlends, targetMotionParams);
 					targetWaypoint.setConfig(targetConfig);
 					
-					// Build a folder for gripper logic
-					FolderNode gripperFolder = nf.createFolderNode();
-					gripperFolder.setName("Gripper Grip");
-					
-					// Build a comment for the folder node
-					CommentNode gripperComment = nf.createCommentNode();
-					gripperComment.setComment("Insert gripper GRIP logic here");
-					
 					// Build a MoveL for exit
 					MoveNode exitMoveL = nf.createMoveNodeNoTemplate();
 					exitMoveL.setConfig(exitMoveL.getConfigBuilders().createMoveJConfigBuilder().build());
@@ -136,7 +135,7 @@ public class PickProgramNodeContribution implements ProgramNodeContribution{
 					TreeNode targetMoveTreeNode = partsFoundTreeNode.addChild(targetMoveL);
 					targetMoveTreeNode.addChild(targetWaypoint);
 					
-					partsFoundTreeNode.addChild(gripperFolder).addChild(gripperComment);
+					partsFoundTreeNode.addChild(createGripperNode());
 					
 					TreeNode exitMoveTreeNode = partsFoundTreeNode.addChild(exitMoveL);
 					exitMoveTreeNode.addChild(exitWaypoint);
@@ -176,6 +175,43 @@ public class PickProgramNodeContribution implements ProgramNodeContribution{
 			System.out.println("Exception building pose...");
 		}
 		return var;
+	}
+	
+	private ProgramNode createGripperNode() {
+		GripperNodeFactory gnf = apiProvider.getProgramAPI().getDeviceManager(GripperManager.class).getGripperProgramNodeFactory();
+		ProgramNodeFactory pnf = apiProvider.getProgramAPI().getProgramModel().getProgramNodeFactory();
+		
+		int gripperCount = getGripperCount();
+		if (gripperCount==1) {
+			// Only one gripper driver available, easy to guess which to choose
+			
+			GripperDevice gripper = getGrippers().get(0);
+			GripperNode gripperNode = gnf.createGripperNode(gripper);
+			
+			return gripperNode;
+		} else if (gripperCount > 1) {
+			// More than one gripper available
+			
+			GripperDevice gripper = getGrippers().get(1);
+			GripperNode gripperNode = gnf.createGripperNode(gripper);
+			
+			return gripperNode;
+		} else {
+			// No gripper drivers available, insert a folder instead
+			
+			FolderNode gripperFolder = pnf.createFolderNode();
+			gripperFolder.setName("Gripper Grip");
+			
+			return gripperFolder;
+		}
+	}
+	
+	private List<GripperDevice> getGrippers(){
+		return apiProvider.getProgramAPI().getDeviceManager(GripperManager.class).getGrippers();
+	}
+	
+	private int getGripperCount() {
+		return getGrippers().size();
 	}
 	
 	@Override
