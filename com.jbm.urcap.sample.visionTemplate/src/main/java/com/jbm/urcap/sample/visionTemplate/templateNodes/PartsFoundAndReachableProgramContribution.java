@@ -21,7 +21,8 @@ import com.ur.urcap.api.domain.program.nodes.builtin.configurations.waypointnode
 import com.ur.urcap.api.domain.program.nodes.contributable.device.gripper.GripperNode;
 import com.ur.urcap.api.domain.program.nodes.contributable.device.gripper.GripperNodeFactory;
 import com.ur.urcap.api.domain.program.nodes.contributable.device.gripper.configuration.GripActionConfig;
-import com.ur.urcap.api.domain.program.structure.TreeNode;import com.ur.urcap.api.domain.program.structure.TreeStructureException;
+import com.ur.urcap.api.domain.program.structure.TreeNode;
+import com.ur.urcap.api.domain.program.structure.TreeStructureException;
 import com.ur.urcap.api.domain.script.ScriptWriter;
 import com.ur.urcap.api.domain.undoredo.UndoRedoManager;
 import com.ur.urcap.api.domain.undoredo.UndoableChanges;
@@ -43,6 +44,7 @@ public class PartsFoundAndReachableProgramContribution implements ProgramNodeCon
 	private final PartsFoundAndReachableProgramView view;
 	private final UndoRedoManager undoRedoManager;
 	
+	private static final String BUILT_SUBTREE_KEY = "templateImplemented";
 	private static final String VARIABLE_APPROACH_KEY = "approachWpt";
 	private static final String VARIABLE_TARGET_KEY = "targetWpt";
 	private static final String VARIABLE_EXIT_KEY = "exitWpt";
@@ -55,9 +57,12 @@ public class PartsFoundAndReachableProgramContribution implements ProgramNodeCon
 		this.undoRedoManager = apiProvider.getProgramAPI().getUndoRedoManager();
 		
 		if(context.getNodeCreationType().equals(NodeCreationType.NEW)) {
-			if(getGripperCount()<=1) {
-				// If there is either 0 or 1 Gripper Drivers available, we just build the tree
-				implementTemplateTree();
+			if (getGripperCount() == 0) {
+				// No gripper drivers available, implement folder instead
+				implementTemplateTree(null);
+			}else if(getGripperCount() == 1) {
+				// If there is one Gripper Driver available, we just build the tree
+				implementTemplateTree(getGrippers().get(0));
 			} else {
 				// If more than 1 gripper is available, the user has to decide
 				lockTreeWaitingForGripperSelection();
@@ -65,7 +70,13 @@ public class PartsFoundAndReachableProgramContribution implements ProgramNodeCon
 		}
 	}
 	
-	private void implementTemplateTree() {
+	public void setSelectedGripper(GripperDevice selectedGripper) {
+		System.out.println("Selected gripper: "+selectedGripper.getContributorInfo().getName());
+		implementTemplateTree(selectedGripper);
+		disableGripperSelection();
+	}
+	
+	private void implementTemplateTree(final GripperDevice selectedGripper) {
 		final ProgramModel programModel = apiProvider.getProgramAPI().getProgramModel();
 		final ProgramNodeFactory nf = programModel.getProgramNodeFactory();
 		final TreeNode root = programModel.getRootTreeNode(this);
@@ -123,10 +134,12 @@ public class PartsFoundAndReachableProgramContribution implements ProgramNodeCon
 					TreeNode targetMoveTreeNode = root.addChild(targetMoveL);
 					targetMoveTreeNode.addChild(targetWaypoint);
 					
-					root.addChild(createGripperNode());
+					root.addChild(createGripperNode(selectedGripper));
 					
 					TreeNode exitMoveTreeNode = root.addChild(exitMoveL);
 					exitMoveTreeNode.addChild(exitWaypoint);
+					
+					storeImplementedSubtree(true);
 				} catch (TreeStructureException e) {
 					// TODO: handle exception
 				}
@@ -159,27 +172,10 @@ public class PartsFoundAndReachableProgramContribution implements ProgramNodeCon
 		return var;
 	}
 	
-	private ProgramNode createGripperNode() {
-		GripperNodeFactory gnf = apiProvider.getProgramAPI().getDeviceManager(GripperManager.class).getGripperProgramNodeFactory();
-		ProgramNodeFactory pnf = apiProvider.getProgramAPI().getProgramModel().getProgramNodeFactory();
-		
-		int gripperCount = getGripperCount();
-		if (gripperCount==1) {
-			// Only one gripper driver available, easy to guess which to choose
-			
-			GripperDevice gripper = getGrippers().get(0);
-			GripperNode gripperNode = gnf.createGripperNode(gripper);
-			
-			GripActionConfig gripConfig = gripperNode.createGripActionConfigBuilder().build();
-			gripperNode.setConfig(gripConfig);
-			
-			return gripperNode;
-		} else if (gripperCount > 1) {
-			// More than one gripper available
-			
-			// TODO Handle letting the user select which gripper to use
-			GripperDevice gripper = getGrippers().get(1);
-			GripperNode gripperNode = gnf.createGripperNode(gripper);
+	private ProgramNode createGripperNode(GripperDevice selectedGripper) {
+		if(selectedGripper!=null) {
+			GripperNodeFactory gnf = apiProvider.getProgramAPI().getDeviceManager(GripperManager.class).getGripperProgramNodeFactory();
+			GripperNode gripperNode = gnf.createGripperNode(selectedGripper);
 			
 			GripActionConfig gripConfig = gripperNode.createGripActionConfigBuilder().build();
 			gripperNode.setConfig(gripConfig);
@@ -188,6 +184,8 @@ public class PartsFoundAndReachableProgramContribution implements ProgramNodeCon
 		} else {
 			// No gripper drivers available, insert a folder instead
 			
+			ProgramNodeFactory pnf = apiProvider.getProgramAPI().getProgramModel().getProgramNodeFactory();
+
 			FolderNode gripperFolder = pnf.createFolderNode();
 			gripperFolder.setName("Gripper Grip");
 			
@@ -203,16 +201,45 @@ public class PartsFoundAndReachableProgramContribution implements ProgramNodeCon
 		return getGrippers().size();
 	}
 	
+	private boolean shouldSelectGripper() {
+		return getGripperCount()>1;
+	}
+	
+	private void showGripperSelection() {
+		view.setGripperComboboxItems(getGrippers());
+		view.showGripperSelection(true);
+	}
+	
+	private void hideGripperSelection() {
+		view.showGripperSelection(false);
+	}
+	
+	private void enableGripperSelection() {
+		view.enableGripperSelection(true);
+	}
+	
+	private void disableGripperSelection() {
+		view.enableGripperSelection(false);
+	}
+	
 	@Override
 	public void openView() {
-		// TODO Auto-generated method stub
+		if(shouldSelectGripper()) {
+			showGripperSelection();
+		} else {
+			hideGripperSelection();
+		}
 		
+		if(!isSubtreeImplemented()) {
+			enableGripperSelection();
+		} else {
+			disableGripperSelection();
+		}
 	}
 
 	@Override
 	public void closeView() {
-		// TODO Auto-generated method stub
-		
+		// Do nothing
 	}
 
 	@Override
@@ -227,10 +254,29 @@ public class PartsFoundAndReachableProgramContribution implements ProgramNodeCon
 
 	@Override
 	public void generateScript(ScriptWriter writer) {
+		// We need to pay attention to, that the variable name may have changed
+		// In order to get the variable for the program, this must be done: 
+		String actualApproachVariableName = writer.getResolvedVariableName(getApproachWaypointVariable());
+		// Or we can just use this in an assignment:
+		writer.assign(getApproachWaypointVariable(), "p[0.1, 0.2, 0.3, 0, 3.1415, 0]");
+		writer.appendLine("popup(\"Actual approach name is: "+actualApproachVariableName+"\",\"Vision Message\", blocking=True)");
+		
 		writer.writeChildren();
 	}
 	
+	private boolean isSubtreeImplemented() {
+		return model.get(BUILT_SUBTREE_KEY, false);
+	}
+	
+	private Variable getApproachWaypointVariable() {
+		return model.get(VARIABLE_APPROACH_KEY, createPoseVariable("Approach"));
+	}
+	
 	// NOTE: These are already called inside an "UndoableChanges" scope
+	private void storeImplementedSubtree(boolean implemented) {
+		model.set(BUILT_SUBTREE_KEY, implemented);
+	}
+	
 	private void storeApproachVariable(Variable var) {
 		model.set(VARIABLE_APPROACH_KEY, var);
 	}

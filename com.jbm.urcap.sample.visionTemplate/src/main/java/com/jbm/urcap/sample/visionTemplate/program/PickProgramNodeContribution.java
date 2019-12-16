@@ -60,14 +60,12 @@ public class PickProgramNodeContribution implements ProgramNodeContribution{
 	
 	@Override
 	public void openView() {
-		// TODO Auto-generated method stub
-		
+		// Do nothing
 	}
 
 	@Override
 	public void closeView() {
-		// TODO Auto-generated method stub
-		
+		// Do nothing
 	}
 
 	@Override
@@ -82,14 +80,6 @@ public class PickProgramNodeContribution implements ProgramNodeContribution{
 
 	@Override
 	public void generateScript(ScriptWriter writer) {
-		
-//		// We need to oay attention to, that the variable name may have changed
-//		// In order to get the variable for the program, this must be done: 
-//		String actualApproachVariableName = writer.getResolvedVariableName(getApproachWaypointVariable());
-//		// Or we can just use this in an assignment:
-//		writer.assign(getApproachWaypointVariable(), "p[0.1, 0.2, 0.3, 0, 3.1415, 0]");
-//		writer.appendLine("popup(\"Actual approach name is: "+actualApproachVariableName+"\",\"Vision Message\", blocking=True)");
-		
 		writer.writeChildren();
 	}
 	
