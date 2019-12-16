@@ -141,17 +141,7 @@ public class PickProgramNodeContribution implements ProgramNodeContribution{
 					TreeNode exitMoveTreeNode = partsFoundTreeNode.addChild(exitMoveL);
 					exitMoveTreeNode.addChild(exitWaypoint);
 					
-					// Insert comment under NoAvailablePartsNode
-					TreeNode noAvailablePartsTreeNode = root.getChildren().get(1);
-					CommentNode noPartsCommentNode = nf.createCommentNode();
-					noPartsCommentNode.setComment("Insert your no parts handling code here");
-					noAvailablePartsTreeNode.addChild(noPartsCommentNode);
 					
-					// Insert comment under ErrorNode
-					TreeNode errorTreeNode = root.getChildren().get(2);
-					CommentNode errorCommentNode = nf.createCommentNode();
-					errorCommentNode.setComment("Insert your error handling code here");
-					errorTreeNode.addChild(errorCommentNode);
 				} catch (TreeStructureException e) {
 					// TODO: handle exception
 				}
